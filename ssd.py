@@ -37,8 +37,8 @@ class SSD(nn.Module):
         # SSD network
         self.vgg = nn.ModuleList(base)
         # Layer learns to scale the l2 normalized features from conv4_3
-#         self.L2Norm = L2Norm(512, 20)
-        self.L2Norm = L2Norm(128, 20)
+        self.L2Norm = L2Norm(512, 20)
+#         self.L2Norm = L2Norm(128, 20)
         self.extras = nn.ModuleList(extras)
 
         self.loc = nn.ModuleList(head[0])
@@ -185,19 +185,23 @@ base = {
     '512': [],
     '648':[16, 16, 'M', 32, 32, 'M', 64, 64, 64, 'M', 128, 128, 128, 'C',
             128, 128, 128],
+    '768': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'C', 512, 512, 512, 'M',
+            512, 512, 512],
 }
 extras = {
     '300': [256, 'S', 512, 128, 'S', 256, 128, 256, 128, 256],
     '512': [],
     '648': [256, 'S', 512, 128, 'S', 256, 128, 'S', 256, 128, 'S', 256, 128, 256],
+    '768': [256, 'S', 512, 128, 'S', 256, 128, 256, 128, 256],
 }
 mbox = {
     '300': [4, 6, 6, 6, 4, 4],  # number of boxes per feature map location
     '512': [],
     '648': [4, 6, 6, 4, 4, 8, 4],
+    '768': [256, 'S', 512, 128, 'S', 256, 128, 256, 128, 256],
 }
 
-def build_ssd(phase, size=648, num_classes=5):
+def build_ssd(phase, size=768, num_classes=5):
     if phase != "test" and phase != "train":
         print("ERROR: Phase: " + phase + " not recognized")
         return
