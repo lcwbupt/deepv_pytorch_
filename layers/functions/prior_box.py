@@ -49,9 +49,10 @@ class PriorBox(object):
          
                         # aspect_ratio: 1
                         # rel size: sqrt(s_k * s_(k+1))
-                        s_k_prime_w = sqrt(s_k_w * (self.max_sizes[k][m]/self.image_width))
-                        s_k_prime_h = sqrt(s_k_h * (self.max_sizes[k][m]/self.image_height))
-                        mean += [cx, cy, s_k_prime_w, s_k_prime_h]
+                        if len(self.max_sizes) > 0:
+                            s_k_prime_w = sqrt(s_k_w * (self.max_sizes[k][m]/self.image_width))
+                            s_k_prime_h = sqrt(s_k_h * (self.max_sizes[k][m]/self.image_height))
+                            mean += [cx, cy, s_k_prime_w, s_k_prime_h]
      
                         # rest of aspect ratios
                         for ar in self.aspect_ratios[k]:
@@ -64,9 +65,10 @@ class PriorBox(object):
     
                     # aspect_ratio: 1
                     # rel size: sqrt(s_k * s_(k+1))
-                    s_k_prime_w = sqrt(s_k_w * (self.max_sizes[k]/self.image_width))
-                    s_k_prime_h = sqrt(s_k_h * (self.max_sizes[k]/self.image_height))
-                    mean += [cx, cy, s_k_prime_w, s_k_prime_h]
+                    if len(self.max_sizes) > 0:
+                        s_k_prime_w = sqrt(s_k_w * (self.max_sizes[k]/self.image_width))
+                        s_k_prime_h = sqrt(s_k_h * (self.max_sizes[k]/self.image_height))
+                        mean += [cx, cy, s_k_prime_w, s_k_prime_h]
 
                     # rest of aspect ratios
                     for ar in self.aspect_ratios[k]:

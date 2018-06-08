@@ -27,7 +27,7 @@ parser.add_argument('--dataset', default='VOC', choices=['VOC', 'COCO'],
                     type=str, help='VOC or COCO')
 parser.add_argument('--dataset_root', default=VOC_ROOT,
                     help='Dataset root directory path')
-parser.add_argument('--basenet', default='vgg16_torch.pth',
+parser.add_argument('--basenet', default='vgg16_reducedfc.pth',
                     help='Pretrained base model')
 parser.add_argument('--batch_size', default=32, type=int,
                     help='Batch size for training')
@@ -87,8 +87,7 @@ def train():
 #             parser.error('Must specify dataset if specifying dataset_root')
         cfg = deepv
         dataset = VOCDetection(root=args.dataset_root,
-                               transform=SSDAugmentation([cfg['image_width'], cfg['image_height']],
-                                                         MEANS))
+                               transform=SSDAugmentation([cfg['image_width'], cfg['image_height']], MEANS))
 
     if args.visdom:
         import visdom
@@ -99,28 +98,29 @@ def train():
     net = ssd_net
 
     if args.cuda:
-        net = torch.nn.DataParallel(ssd_net, device_ids=[0,1,2,3,4,5])
+        net = torch.nn.DataParallel(ssd_net, device_ids=[0])
         cudnn.benchmark = True
 
     if args.resume:
         print('Resuming training, loading {}...'.format(args.resume))
         ssd_net.load_weights(args.resume)
     else:
-#         vgg_weights = torch.load(args.save_folder + args.basenet)
-#         print('Loading base network...')
-#         ssd_net.vgg.load_state_dict(vgg_weights)
+        # vgg_weights = torch.load(args.save_folder + args.basenet)
+        # print('Loading base network...')
+        # ssd_net.vgg.load_state_dict(vgg_weights)
         if args.basenet == 'resnet18.pth':
             resnet_weights = torch.load(args.save_folder + args.basenet)
             print('Loading base network...')
             ssd_net.resnet18.load_state_dict(resnet_weights)
         else:
+            print('Initializing vgg weights...')
             ssd_net.vgg.apply(weights_init)
 
     if args.cuda:
         net = net.cuda()
 
     if not args.resume:
-        print('Initializing weights...')
+        print('Initializing newly added layers weights...')
         # initialize newly added layers' weights with xavier method
         ssd_net.extras.apply(weights_init)
         ssd_net.loc.apply(weights_init)
@@ -155,10 +155,10 @@ def train():
                                   num_workers=args.num_workers,
                                   shuffle=True, collate_fn=detection_collate,
                                   pin_memory=True)
+
     # create batch iterator
     batch_iterator = iter(data_loader)
     for iteration in range(args.start_iter, cfg['max_iter']):
-        t0 = time.time()
         if args.visdom and iteration != 0 and (iteration % epoch_size == 0):
             update_vis_plot(epoch, loc_loss, conf_loss, epoch_plot, None,
                             'append', epoch_size)
@@ -172,22 +172,23 @@ def train():
             adjust_learning_rate(optimizer, args.gamma, step_index)
 
         # load train data
-#         images, targets = next(batch_iterator)
         try:
             images, targets = next(batch_iterator)
         except StopIteration:
             batch_iterator = iter(data_loader)
             images, targets = next(batch_iterator)
-
+        
         if args.cuda:
             images = Variable(images.cuda())
             targets = [Variable(ann.cuda(), volatile=True) for ann in targets]
         else:
             images = Variable(images)
             targets = [Variable(ann, volatile=True) for ann in targets]
+
         # forward
-#         t0 = time.time()
+        t0 = time.time()
         out = net(images)
+
         # backprop
         optimizer.zero_grad()
         loss_l, loss_c = criterion(out, targets)
@@ -198,7 +199,7 @@ def train():
         loc_loss += loss_l.data[0]
         conf_loss += loss_c.data[0]
 
-        if iteration % 10 == 0:
+        if iteration % 1 == 0:
             print('timer: %.4f sec.' % (t1 - t0))
             #print('iter ' + repr(iteration) + ' || Loss: %.4f ||' % (loss.data[0]), end=' ')
             print('iter ' + repr(iteration) + ' || Loss: %.4f ' % (loss.data[0]) + ' || conf_loss: %.4f ' % (loss_c.data[0]) + ' || smoothl1 loss: %.4f ' % (loss_l.data[0]), end=' ')
@@ -209,7 +210,7 @@ def train():
 
         if iteration != 0 and iteration % 1000 == 0:
             print('Saving state, iter:', iteration)
-            torch.save(ssd_net.state_dict(), 'weights/ssd_1152_648_anchor8_C' +
+            torch.save(ssd_net.state_dict(), 'weights/ssd_768_512_tinyvgg' +
                        repr(iteration) + '.pth')
     torch.save(ssd_net.state_dict(),
                args.save_folder + '' + args.dataset + '.pth')
