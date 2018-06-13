@@ -22,6 +22,7 @@ class PriorBox(object):
         self.steps = cfg['steps']
         self.aspect_ratios = cfg['aspect_ratios']
         self.clip = cfg['clip']
+        self.flip = cfg['flip']
         self.version = cfg['name']
         for v in self.variance:
             if v <= 0:
@@ -30,11 +31,13 @@ class PriorBox(object):
     def forward(self):
         mean = []
         for k, f in enumerate(self.feature_maps):
-            print(f)
-            for i, j in product(range(f[0]), range(f[1])):
+            step_w = self.image_width / f[0]
+            step_h = self.image_height / f[1]
+            print(f, step_w, step_h)
+            for i, j in product(range(f[1]), range(f[0])):
                 
-                f_k_w = self.image_width / self.steps[k]
-                f_k_h = self.image_height / self.steps[k]
+                f_k_w = self.image_width / step_w
+                f_k_h = self.image_height / step_h
                 # unit center x,y
                 cx = (j + 0.5) / f_k_w
                 cy = (i + 0.5) / f_k_h
@@ -71,9 +74,13 @@ class PriorBox(object):
                         mean += [cx, cy, s_k_prime_w, s_k_prime_h]
 
                     # rest of aspect ratios
-                    for ar in self.aspect_ratios[k]:
-                        mean += [cx, cy, s_k_w*sqrt(ar), s_k_h/sqrt(ar)]
-                        mean += [cx, cy, s_k_w/sqrt(ar), s_k_h*sqrt(ar)]
+                    if self.flip:
+                        for ar in self.aspect_ratios[k]:
+                            mean += [cx, cy, s_k_w*sqrt(ar), s_k_h/sqrt(ar)]
+                            mean += [cx, cy, s_k_w/sqrt(ar), s_k_h*sqrt(ar)]
+                    else:
+                        for ar in self.aspect_ratios[k]:
+                            mean += [cx, cy, s_k_w*sqrt(ar), s_k_h/sqrt(ar)]
         # back to torch land
         output = torch.Tensor(mean).view(-1, 4)
         if self.clip:

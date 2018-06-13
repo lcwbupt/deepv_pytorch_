@@ -30,7 +30,7 @@ parser.add_argument('--dataset_root', default=VOC_ROOT,
                     help='Dataset root directory path')
 parser.add_argument('--basenet', default='vgg16_reducedfc.pth',
                     help='Pretrained base model')
-parser.add_argument('--batch_size', default=32, type=int,
+parser.add_argument('--batch_size', default=48, type=int,
                     help='Batch size for training')
 parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from')
@@ -68,6 +68,9 @@ else:
 if not os.path.exists(args.save_folder):
     os.mkdir(args.save_folder)
 
+import visdom
+viz=visdom.Visdom()
+
 def train():
     if args.dataset == 'COCO':
         if args.dataset_root == VOC_ROOT:
@@ -103,16 +106,16 @@ def train():
         print('Resuming training, loading {}...'.format(args.resume))
         ssd_net.load_weights(args.resume)
     else:
-        #vgg_weights = torch.load(args.save_folder + args.basenet)
-        #print('Loading base network...')
-        #ssd_net.vgg.load_state_dict(vgg_weights)
-        ssd_net.vgg.apply(weights_init)
+        vgg_weights = torch.load(args.save_folder + args.basenet)
+        print('Loading base network...')
+        ssd_net.vgg.load_state_dict(vgg_weights)
+        #ssd_net.vgg.apply(weights_init)
 
     if args.cuda:
         net = net.cuda()
 
     if not args.resume:
-        print('Initializing weights...')
+        print('Initializing newly added layers weights...')
         # initialize newly added layers' weights with xavier method
         ssd_net.extras.apply(weights_init)
         ssd_net.loc.apply(weights_init)

@@ -421,18 +421,17 @@ def evaluate_detections(box_list, output_dir, dataset):
 if __name__ == '__main__':
     # load net
     num_classes = len(labelmap) + 1                      # +1 for background
-    net = build_ssd('test', 648, num_classes)            # initialize SSD
+    net = build_ssd('test', 768, num_classes)            # initialize SSD
     net.load_state_dict(torch.load(args.trained_model))
-    net.eval()
     print('Finished loading model!')
     # load data
     dataset = VOCDetection(args.voc_root, set_type,
-                           BaseTransform([1152, 648], dataset_mean),
+                           BaseTransform([768, 512], dataset_mean),
                            VOCAnnotationTransform())
     if args.cuda:
         net = net.cuda()
         cudnn.benchmark = True
     # evaluation
     test_net(args.save_folder, net, args.cuda, dataset,
-             BaseTransform([1152, 648], dataset_mean), args.top_k, 648,
+             BaseTransform([768, 512], dataset_mean), args.top_k, 768,
              thresh=args.confidence_threshold)

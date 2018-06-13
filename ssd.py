@@ -29,7 +29,7 @@ class SSD(nn.Module):
         super(SSD, self).__init__()
         self.phase = phase
         self.num_classes = num_classes
-        self.cfg = (voc, deepv)[num_classes == 5]
+        self.cfg = deepv
         self.priorbox = PriorBox(self.cfg)
         self.priors = Variable(self.priorbox.forward(), volatile=True)
         self.size = size
@@ -37,8 +37,8 @@ class SSD(nn.Module):
         # SSD network
         self.vgg = nn.ModuleList(base)
         # Layer learns to scale the l2 normalized features from conv4_3
-        # self.L2Norm = L2Norm(512, 20)
-        self.L2Norm = L2Norm(128, 20)
+        self.L2Norm = L2Norm(512, 20)
+        # self.L2Norm = L2Norm(128, 20)
         self.extras = nn.ModuleList(extras)
 
         self.loc = nn.ModuleList(head[0])
@@ -139,8 +139,8 @@ def vgg(cfg, i, batch_norm=False):
                 layers += [conv2d, nn.ReLU(inplace=True)]
             in_channels = v
     pool5 = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
-    conv6 = nn.Conv2d(128, 256, kernel_size=3, padding=6, dilation=6)
-    conv7 = nn.Conv2d(256, 256, kernel_size=1)
+    conv6 = nn.Conv2d(512, 1024, kernel_size=3, padding=6, dilation=6)
+    conv7 = nn.Conv2d(1024, 1024, kernel_size=1)
     layers += [pool5, conv6,
                nn.ReLU(inplace=True), conv7, nn.ReLU(inplace=True)]
     return layers
@@ -183,10 +183,10 @@ base = {
     '300': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'C', 512, 512, 512, 'M',
             512, 512, 512],
     '512': [],
-    '648':[16, 16, 'M', 32, 32, 'M', 64, 64, 64, 'M', 128, 128, 128, 'C',
+    '648': [16, 16, 'M', 32, 32, 'M', 64, 64, 64, 'M', 128, 128, 128, 'C',
             128, 128, 128],
-    '768':[16, 16, 'M', 32, 32, 'M', 64, 64, 64, 'M', 128, 128, 128, 'C',
-            128, 128, 128],
+    '768': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'C', 512, 512, 512, 'M',
+            512, 512, 512],
 }
 extras = {
     '300': [256, 'S', 512, 128, 'S', 256, 128, 256, 128, 256],
@@ -198,7 +198,7 @@ mbox = {
     '300': [4, 6, 6, 6, 4, 4],  # number of boxes per feature map location
     '512': [],
     '648': [4, 6, 6, 4, 4, 8, 4],
-    '768': [3, 4, 4, 3, 3, 3, 3],
+    '768': [2, 4, 4, 3, 3, 3],
 }
 
 def build_ssd(phase, size=768, num_classes=5):
@@ -210,7 +210,7 @@ def build_ssd(phase, size=768, num_classes=5):
 #               "currently only SSD300 (size=300) is supported!")
 #         return
     base_, extras_, head_ = multibox(vgg(base[str(size)], 3),
-                                     add_extras(extras[str(size)], 256),
+                                     add_extras(extras[str(size)], 1024),
                                      mbox[str(size)], num_classes)
     return SSD(phase, size, base_, extras_, head_, num_classes)
 

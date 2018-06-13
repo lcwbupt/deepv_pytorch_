@@ -29,7 +29,7 @@ parser.add_argument('--dataset_root', default=VOC_ROOT,
                     help='Dataset root directory path')
 parser.add_argument('--basenet', default='vgg16_reducedfc.pth',
                     help='Pretrained base model')
-parser.add_argument('--batch_size', default=32, type=int,
+parser.add_argument('--batch_size', default=48, type=int,
                     help='Batch size for training')
 parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from')
@@ -98,23 +98,23 @@ def train():
     net = ssd_net
 
     if args.cuda:
-        net = torch.nn.DataParallel(ssd_net, device_ids=[0])
+        net = torch.nn.DataParallel(ssd_net, device_ids=[0,1,2,3,4,5])
         cudnn.benchmark = True
 
     if args.resume:
         print('Resuming training, loading {}...'.format(args.resume))
         ssd_net.load_weights(args.resume)
     else:
-        # vgg_weights = torch.load(args.save_folder + args.basenet)
-        # print('Loading base network...')
-        # ssd_net.vgg.load_state_dict(vgg_weights)
-        if args.basenet == 'resnet18.pth':
-            resnet_weights = torch.load(args.save_folder + args.basenet)
-            print('Loading base network...')
-            ssd_net.resnet18.load_state_dict(resnet_weights)
-        else:
-            print('Initializing vgg weights...')
-            ssd_net.vgg.apply(weights_init)
+        vgg_weights = torch.load(args.save_folder + args.basenet)
+        print('Loading base network...')
+        ssd_net.vgg.load_state_dict(vgg_weights)
+        # if args.basenet == 'resnet18.pth':
+        #     resnet_weights = torch.load(args.save_folder + args.basenet)
+        #     print('Loading base network...')
+        #     ssd_net.resnet18.load_state_dict(resnet_weights)
+        # else:
+        #     print('Initializing vgg weights...')
+        #     ssd_net.vgg.apply(weights_init)
 
     if args.cuda:
         net = net.cuda()
@@ -210,7 +210,7 @@ def train():
 
         if iteration != 0 and iteration % 1000 == 0:
             print('Saving state, iter:', iteration)
-            torch.save(ssd_net.state_dict(), 'weights/ssd_768_512_tinyvgg' +
+            torch.save(ssd_net.state_dict(), 'weights/ssd_768_512_fullvgg_new' +
                        repr(iteration) + '.pth')
     torch.save(ssd_net.state_dict(),
                args.save_folder + '' + args.dataset + '.pth')
