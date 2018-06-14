@@ -98,6 +98,7 @@ class MultiBoxRepulsionLoss(nn.Module):
         loss_l = F.smooth_l1_loss(loc_p, loc_t, size_average=False)
         repul_loss = RepulsionLoss(sigma=0.)
         loss_l_repul = repul_loss(loc_p, loc_g, priors)
+#         loss_l, loss_l_repul = repul_loss(loc_p, loc_t, loc_g, priors)
 
         # Compute max conf across batch for hard negative mining
         batch_conf = conf_data.view(-1, self.num_classes)

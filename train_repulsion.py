@@ -36,7 +36,7 @@ parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from')
 parser.add_argument('--start_iter', default=0, type=int,
                     help='Resume training at this iter')
-parser.add_argument('--num_workers', default=4, type=int,
+parser.add_argument('--num_workers', default=6, type=int,
                     help='Number of workers used in dataloading')
 parser.add_argument('--cuda', default=True, type=str2bool,
                     help='Use CUDA to train model')
@@ -99,7 +99,7 @@ def train():
     net = ssd_net
 
     if args.cuda:
-        net = torch.nn.DataParallel(ssd_net, device_ids=[0,2,3,4,5,6])
+        net = torch.nn.DataParallel(ssd_net, device_ids=[0,3,4,5,6,7])
         cudnn.benchmark = True
 
     if args.resume:
@@ -194,7 +194,7 @@ def train():
         conf_loss += loss_c.data[0]
         repul_loss += loss_l_repul.data[0]
 
-        if iteration % 1 == 0:
+        if iteration % 2 == 0:
             print('timer: %.4f sec.' % (t1 - t0))
 #             print('iter ' + repr(iteration) + ' || Loss: %.4f ||' % (loss.data[0]), end=' ')
             print('iter ' + repr(iteration) + ' || Loss: %.4f ' % (loss.data[0]) + ' || conf_loss: %.4f ' % (loss_c.data[0]) + ' || smoothl1 loss: %.4f ' % (loss_l.data[0]) + ' || repul loss: %.4f ||' % (loss_l_repul.data[0]), end=' ')
