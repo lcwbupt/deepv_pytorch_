@@ -43,8 +43,8 @@ coco = {
 
 deepv = {
     'num_classes': 5,
-    'lr_steps': (100000, 150000, 180000),
-    'max_iter': 180000,
+    'lr_steps': (30000, 35000, 40000),
+    'max_iter': 40000,
 #     'feature_maps': [[144,81], [72, 41], [36, 21], [18, 11], [9, 6], [5, 3], [3, 1]],
 #     'image_height': 648,
 #     'image_width': 1152,

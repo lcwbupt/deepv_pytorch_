@@ -99,7 +99,7 @@ def train():
     net = ssd_net
 
     if args.cuda:
-        net = torch.nn.DataParallel(ssd_net, device_ids=[0,3,4,5,6,7])
+        net = torch.nn.DataParallel(ssd_net, device_ids=[0,1,2,3,4,5])
         cudnn.benchmark = True
 
     if args.resume:
@@ -205,7 +205,7 @@ def train():
 
         if iteration != 0 and iteration % 1000 == 0:
             print('Saving state, iter:', iteration)
-            torch.save(ssd_net.state_dict(), 'weights/ssd_repul_' +
+            torch.save(ssd_net.state_dict(), 'weights/ssd_repul_scratch' +
                        repr(iteration) + '.pth')
     torch.save(ssd_net.state_dict(),
                args.save_folder + '' + args.dataset + '.pth')
