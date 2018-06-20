@@ -7,6 +7,7 @@ from torch.autograd import Variable
 from data import coco as cfg
 from ..box_utils import IoG, decode_new
 import sys
+import math
 
 
 class RepulsionLoss(nn.Module):
@@ -68,7 +69,7 @@ class RepulsionLoss(nn.Module):
         tensor1 = torch.masked_select(iog, mask_1)
         tensor1 = -torch.log(1-tensor1+1e-10)
         tensor2 = torch.masked_select(iog, mask_2)
-        tensor2 = (tensor2-self.sigma)/(1-self.sigma)-torch.log(1-self.sigma)
+        tensor2 = (tensor2-self.sigma)/(1-self.sigma)-math.log(1-self.sigma)
         loss = torch.sum(tensor1) + torch.sum(tensor2) 
         
         return loss
