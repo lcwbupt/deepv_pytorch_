@@ -20,7 +20,15 @@ class RepulsionLoss(nn.Module):
         
     # TODO 
     def smoothln(self, x, sigma=0.):        
-        pass
+        # −ln(1−x), for x <= sigma
+        # (x-sigma)/(1-sigma)-ln(1-sigma), for x > sigma
+        mask_1 = x<=sigma
+        mask_2 = x>sigma
+        tensor1 = torch.masked_select(x, mask_1)
+        tensor1 = -torch.log(1-tensor1+1e-10)
+        tensor2 = torch.masked_select(x, mask_2)
+        tensor2 = (tensor2-sigma)/(1-sigma)-torch.log(1-sigma)
+        return torch.sum(tensor1) + torch.sum(tensor2)
     
     def smoothl1(self, y_pred, y_true):
 #         sigma_squared = smooth ** 2
@@ -42,33 +50,25 @@ class RepulsionLoss(nn.Module):
         return torch.sum(tensor1) + torch.sum(tensor2)
         
 
-    def forward(self, loc_data, ground_data, prior_data):
+#     def forward(self, loc_data, ground_data, prior_data):
           
+#         decoded_boxes = decode_new(loc_data, Variable(prior_data.data, requires_grad=False), self.variance)
+#         iog = IoG(ground_data, decoded_boxes)
+# #         sigma = 1
+# #         loss = torch.sum(-torch.log(1-iog+1e-10))  
+#         # sigma = 0
+#         loss = torch.sum(iog)          
+#         return loss
+
+    def forward(self, loc_data, ground_data, prior_data):
         decoded_boxes = decode_new(loc_data, Variable(prior_data.data, requires_grad=False), self.variance)
         iog = IoG(ground_data, decoded_boxes)
-#         sigma = 1
-#         loss = torch.sum(-torch.log(1-iog+1e-10))  
-        # sigma = 0
-        loss = torch.sum(iog)          
+        mask_1 = x<=sigma
+        mask_2 = x>sigma
+        tensor1 = torch.masked_select(x, mask_1)
+        tensor1 = -torch.log(1-tensor1+1e-10)
+        tensor2 = torch.masked_select(x, mask_2)
+        tensor2 = (tensor2-sigma)/(1-sigma)-torch.log(1-sigma)
+        loss = torch.sum(tensor1) + torch.sum(tensor2) 
+        
         return loss
-
-#     def forward(self, loc_p, loc_t, loc_g, priors):
-#         regression_diff = loc_p - loc_t
-#         regression_diff = torch.abs(regression_diff)
-#         mask_1 = regression_diff<1.0
-#         mask_2 = regression_diff>=1.0
-#         tensor1 = torch.masked_select(regression_diff, mask_1)
-#         tensor1 = 0.5*tensor1*tensor1
-#         tensor2 = torch.masked_select(regression_diff, mask_2)
-#         tensor2 = tensor2 - 0.5
-#         loss_smoothl1 = torch.sum(tensor1) + torch.sum(tensor2) 
-#         
-#         decoded_boxes = decode_new(loc_p, Variable(priors.data, requires_grad=False), self.variance)
-#         iog = IoG(loc_g, decoded_boxes)
-#         
-# #         sigma = 1
-# #         loss_repul = torch.sum(-torch.log(1-iog+1e-10))  
-#         # sigma = 0
-#         loss_repul = torch.sum(iog)     
-#         
-#         return loss_smoothl1, loss_repul
