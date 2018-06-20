@@ -63,12 +63,12 @@ class RepulsionLoss(nn.Module):
     def forward(self, loc_data, ground_data, prior_data):
         decoded_boxes = decode_new(loc_data, Variable(prior_data.data, requires_grad=False), self.variance)
         iog = IoG(ground_data, decoded_boxes)
-        mask_1 = iog<=sigma
-        mask_2 = iog>sigma
+        mask_1 = iog<=self.sigma
+        mask_2 = iog>self.sigma
         tensor1 = torch.masked_select(iog, mask_1)
         tensor1 = -torch.log(1-tensor1+1e-10)
         tensor2 = torch.masked_select(iog, mask_2)
-        tensor2 = (tensor2-sigma)/(1-sigma)-torch.log(1-sigma)
+        tensor2 = (tensor2-self.sigma)/(1-self.sigma)-torch.log(1-self.sigma)
         loss = torch.sum(tensor1) + torch.sum(tensor2) 
         
         return loss
