@@ -187,6 +187,10 @@ def match_new(threshold, predicts, truths, priors, variances, labels, loc_t, loc
 #     for i in range(best_truth_idx.size(0)):
 #         overlaps[best_truth_idx[i]][i] = -1
     # TODO select the second largest IoU target from the same class
+    labels = torch.unsqueeze(labels, 1) + 1
+    mask = (conf != labels)
+    overlaps.masked_fill_(mask, -1)
+    
     index = torch.unsqueeze(best_truth_idx, 0)
     overlaps.scatter_(0, index, -1)
     second_truth_overlap, second_truth_idx = overlaps.max(0, keepdim=True)    
